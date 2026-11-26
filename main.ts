@@ -18,6 +18,11 @@ function copyFolder(name: string): void {
   if (existsSync(from)) cpSync(from, to, { recursive: true });
 }
 
+// Fail loudly rather than hand in an empty entry if the game folder is missing.
+if (!existsSync(join(repoRoot, 'game', 'index.html'))) {
+  throw new Error('game/index.html not found next to main.ts');
+}
+
 mkdirSync(outputDir, { recursive: true });
 copyFolder('game');
 copyFolder('screenshots');
