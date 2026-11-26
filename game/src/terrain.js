@@ -92,9 +92,9 @@ function colourFor(x, z, h, slope, out) {
     const cell = Math.abs(Math.sin(fx * 12.9898 + fz * 78.233) * 43758.5453) % 1;
     if (cell > 0.55) out.lerp(cell > 0.8 ? C.field : C.sand, 0.35);
   }
-  const rockiness = smoothstep(0.35, 0.75, slope) + smoothstep(380, 560, h) * 0.7;
+  const rockiness = smoothstep(0.35, 0.75, slope) + smoothstep(250, 400, h) * 0.7;
   out.lerp(n > 0.5 ? C.rock : C.rock2, clamp(rockiness, 0, 1));
-  out.lerp(C.snow, smoothstep(560 + n * 60, 690, h) * (1 - smoothstep(0.6, 1.0, slope)));
+  out.lerp(C.snow, smoothstep(330 + n * 70, 450 + n * 40, h) * (1 - smoothstep(0.75, 1.15, slope)));
   return out;
 }
 
@@ -230,7 +230,9 @@ export function buildSea() {
         vec2 p = vWorld.xz;
         float dx = wave(p, vec2(0.8, 0.6), 0.05, 1.3) * 0.5 + wave(p, vec2(-0.3, 0.95), 0.11, 2.1) * 0.3 + wave(p, vec2(0.95, -0.2), 0.23, 2.9) * 0.2;
         float dz = wave(p, vec2(0.6, -0.8), 0.07, 1.7) * 0.5 + wave(p, vec2(0.2, 0.98), 0.17, 2.4) * 0.3;
-        vec3 n = normalize(vec3(dx * 0.08, 1.0, dz * 0.08));
+        // flatten the ripples with distance so they do not alias into stripes near the horizon
+        float calm = 0.08 / (1.0 + distance(cameraPosition, vWorld) * 0.0022);
+        vec3 n = normalize(vec3(dx * calm, 1.0, dz * calm));
         vec3 view = normalize(cameraPosition - vWorld);
         float fres = pow(1.0 - max(dot(n, view), 0.0), 4.0);
         vec3 water = mix(uDeep, uShallow, smoothstep(0.15, 0.95, shallow)) * uLight;

@@ -330,7 +330,7 @@ export class Hud {
     if (!s.engineOn) items.push({ t: 'ENGINE OUT', c: WARN, blink: true });
     if (s.overspeed) items.push({ t: 'OVERSPEED', c: WARN, blink: true });
     if (s.pullUp) items.push({ t: 'PULL UP', c: WARN, blink: true });
-    const y = s.view === 'chase' && !compact && H > 520 ? H - Math.min(46 * k, W / 34) * 2.55 - 26 * k : H - 26 * k;
+    const y = s.view === 'chase' && !compact && H > 520 ? H - Math.min(46 * k, W / 34) * 2.55 - 26 * k : s.view === 'cockpit' && !compact ? 124 * k : H - 26 * k;
     const sz = (compact ? 11 : 14) * k;
     this.g.font = `800 ${sz}px ${FONT}`;
     const widths = items.map((i) => this.g.measureText(i.t).width + 22 * k);

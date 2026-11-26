@@ -24,20 +24,22 @@ function placeOnApproach(game, fieldId, u, v, height, speed, pitch = -2) {
 const SETUPS = {
   approach(game) {
     game.launch('circuit');
-    skipTo(game, 1, 5, 171.4);
-    placeOnApproach(game, 'harbor', -1380, -3, 64, 36, -2);
+    const q = new URLSearchParams(location.search);
+    const u = Number(q.get('u') || -620), h = Number(q.get('h') || 34);
+    if (u > -1050) skipTo(game, 2, 0, 188.6); else skipTo(game, 1, 5, 171.4);
+    placeOnApproach(game, 'harbor', u, -3, h, 36, -2);
     Object.assign(game.input.controls, { throttle: 0.28, flaps: 2, gearDown: true, pitch: -0.35 });
     game.fm.gearDown = true; game.aircraft.gearT = 1;
     game.fm.fuel *= 0.78;
     game.setView('chase');
   },
   cockpit(game) {
-    game.launch('mail');
-    skipTo(game, 2, 0, 251.2);
-    placeOnApproach(game, 'light', -1150, 3, 46, 34, -4);
+    game.launch('circuit');
+    skipTo(game, 1, 5, 171.4);
+    placeOnApproach(game, 'harbor', -1420, 4, 70, 36, -3);
     Object.assign(game.input.controls, { throttle: 0.25, flaps: 2, gearDown: true, pitch: -0.35 });
     game.fm.gearDown = true; game.aircraft.gearT = 1;
-    game.fm.fuel *= 0.4;
+    game.fm.fuel *= 0.78;
     game.setView('cockpit');
   },
   valley(game) {
