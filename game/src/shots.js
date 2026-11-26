@@ -62,6 +62,18 @@ const SETUPS = {
     game.fm.gearDown = false; game.aircraft.gearT = 0;
     game.setView('chase');
   },
+  touchdown(game) {
+    game.launch('mail');
+    skipTo(game, 2, 0, 288.4);
+    placeOnApproach(game, 'light', -330, 1, 1.9, 31, 2);
+    game.fm.vel.y = -1.1;
+    game.fm.trim = 0.04;
+    Object.assign(game.input.controls, { throttle: 0, flaps: 2, gearDown: true, pitch: 0 });
+    game.fm.gearDown = true; game.aircraft.gearT = 1;
+    game.fm.fuel *= 0.35;
+    game.setView('chase');
+    return 'keep-banners';
+  },
   menu(game) {
     game.mode = 'menu';
     game.ui.missions(game.missions);
@@ -83,7 +95,7 @@ export function stageShot(game, name) {
   const wait = Number(new URLSearchParams(location.search).get('frames') || 50);
   const tick = () => {
     frames++;
-    if (frames === 20) game.hud.messages = [];
+    if (frames === 2 || (frames === 20 && r !== 'keep-banners')) game.hud.messages = [];
     if (frames >= wait) { window.__shotReady = true; return; }
     requestAnimationFrame(tick);
   };

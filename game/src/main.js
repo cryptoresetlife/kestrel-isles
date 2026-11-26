@@ -276,7 +276,8 @@ class Game {
 
   hudState() {
     const fm = this.fm, c = this.input.controls, r = this.runner;
-    const target = this.mode === 'flying' ? r.target(fm) : null;
+    const rolling = r.step && r.step.type === 'land' && r.landing && fm.agl < 6;
+    const target = this.mode === 'flying' && !rolling ? r.target(fm) : null;
     let bearing = null;
     if (target) bearing = (THREE.MathUtils.radToDeg(Math.atan2(target.pos.x - fm.pos.x, -(target.pos.z - fm.pos.z))) + 360) % 360;
     const radarPoints = [];
