@@ -36,7 +36,7 @@ export class CameraRig {
       const k = this.first ? 1 : 1 - Math.exp(-dt * 3.2);
       this.frame.slerp(fm.quat, k);
       const speedPull = Math.min(1, fm.airspeed / 70);
-      const dist = 15 + speedPull * 3, height = 4.8;
+      const dist = 12 + speedPull * 2.5, height = 4.1;
       _v.set(0, height, dist).applyQuaternion(this.frame);
       // keep the camera above the ground and level-ish in pitch so the horizon stays readable
       const target = _w.copy(fm.pos).add(_v);

@@ -81,22 +81,25 @@ export class Hud {
     const g = this.g;
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     const W = this.W, H = this.H;
-    const compact = W < 760 || H < 500;
+    const compact = W < 700 || H < 440;
     const touch = document.body.classList.contains('touch');
-    const scale = Math.max(0.72, Math.min(1.25, Math.min(W / 1280, H / 720) * 1.05));
+    const scale = Math.max(0.86, Math.min(1.25, Math.min(W / 1280, H / 720) * 1.05));
     this.scale = scale;
     if (s.runwayCue) this.runwayBox(s, camera, W, H, scale);
     if (s.showTargets) this.targets(s, camera, W, H, scale);
     this.flightPath(s, camera, W, H, scale);
-    this.headingTape(s, W / 2, 34 * scale, Math.min(W * 0.46, 560 * scale), 46 * scale, scale);
-    const tapeH = touch ? Math.min(H * 0.3, 220 * scale) : Math.min(H * 0.4, 290 * scale);
-    const tapeY = touch ? H * 0.38 : H * 0.5;
+    // the heading tape sits between the mission card and the radar, sliding off centre on narrow windows
+    const gapL = compact ? 0 : 26 + 300 * scale, gapR = compact ? W : W - 160 * scale - 30;
+    const hdgW = Math.min(W * 0.46, 560 * scale, gapR - gapL);
+    this.headingTape(s, Math.max(gapL + hdgW / 2, Math.min(gapR - hdgW / 2, W / 2)), 34 * scale, hdgW, 46 * scale, scale);
+    const tapeH = touch ? Math.min(H * 0.3, 220 * scale) : Math.min(H * 0.36, 290 * scale);
+    const tapeY = touch ? H * 0.38 : H < 600 ? H * 0.55 : H * 0.5;
     this.speedTape(s, 44 * scale + (compact ? 0 : 20), tapeY, 92 * scale, tapeH, scale);
     this.altTape(s, W - (44 * scale + (compact ? 0 : 20)) - 92 * scale, tapeY, 92 * scale, tapeH, scale);
     if (!compact) this.missionCard(s, 18, 14, scale);
     else this.missionCompact(s, W, scale);
     this.radar(s, W - 80 * scale - 22, 80 * scale + 14, 80 * scale, scale, compact);
-    if (s.view === 'chase' && !compact && H > 520) this.cluster(s, W, H, scale);
+    if (s.view === 'chase' && !compact) this.cluster(s, W, H, scale);
     this.statusStrip(s, W, H, scale, compact);
     this.banners(dt, W, H, scale);
     if (s.hint) this.hint(s.hint, W, H, scale);
@@ -305,7 +308,7 @@ export class Hud {
   }
 
   cluster(s, W, H, k) {
-    const r = Math.min(46 * k, W / 34);
+    const r = Math.min(46 * k, W / 30);
     const gap = r * 2.45;
     const total = gap * 5 + r * 2.4;
     const x0 = W / 2 - total / 2 + r * 1.2;
@@ -330,7 +333,7 @@ export class Hud {
     if (!s.engineOn) items.push({ t: 'ENGINE OUT', c: WARN, blink: true });
     if (s.overspeed) items.push({ t: 'OVERSPEED', c: WARN, blink: true });
     if (s.pullUp) items.push({ t: 'PULL UP', c: WARN, blink: true });
-    const y = s.view === 'chase' && !compact && H > 520 ? H - Math.min(46 * k, W / 34) * 2.55 - 26 * k : s.view === 'cockpit' && !compact ? 124 * k : H - 26 * k;
+    const y = s.view === 'chase' && !compact ? H - Math.min(46 * k, W / 30) * 2.55 - 26 * k : s.view === 'cockpit' && !compact ? 124 * k : H - 26 * k;
     const sz = (compact ? 11 : 14) * k;
     this.g.font = `800 ${sz}px ${FONT}`;
     const widths = items.map((i) => this.g.measureText(i.t).width + 22 * k);

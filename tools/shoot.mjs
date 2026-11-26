@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const BASE = process.env.BASE || 'http://localhost:8080/';
-const W = Number(process.env.W || 1280), H = Number(process.env.H || 720);
+const W = Number(process.env.W || 768), H = Number(process.env.H || 480);
 const QUALITY = Number(process.env.Q || 86);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
