@@ -41,7 +41,7 @@ export function buildMissions() {
     {
       id: 'valley', name: 'Spine Valley Run', time: 'noon', tag: 'Time trial',
       brief: 'Thread the rings up the valley that splits the northern ridge, then put down on the short Ridge Strip.',
-      tips: 'Keep it low and fast through the gorge; bleed speed early — Ridge Strip is short and high.',
+      tips: 'Keep it low and fast through the gorge, then swing out over the sea and land south-west on the short Ridge Strip.',
       start: { x: valleyX(2700), z: 2700, y: 180, heading: 352, speed: 58 }, fuel: 0.7, wind: { from: 200, speed: 3 },
       steps: [
         { type: 'rings', points: [1500, 950, 400, -150, -700, -1200, -1700].map((z, i) => ring(valleyX(z) + Math.sin(i * 1.3) * 60, z, 55 + (i % 2) * 25, 20)) },
@@ -64,7 +64,7 @@ export function buildMissions() {
     {
       id: 'supply', name: 'Ridge Supply Drop', time: 'morning', tag: 'Mountain',
       brief: 'Haul spares from Lighthouse Point up to Ridge Strip, a short field on the mountain shelf.',
-      tips: 'Climb early: Ridge Strip sits on the shoulder of the range. Approach from the south-west, flaps 2.',
+      tips: 'Ridge Strip is short and backed by the range: come in from the sea to the north-east, flaps 2, and brake hard.',
       start: runwayStart('light'), fuel: 0.55, wind: { from: 30, speed: 5 },
       steps: [
         { type: 'takeoff' },

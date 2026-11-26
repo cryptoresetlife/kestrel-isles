@@ -9,7 +9,7 @@ export function headingVector(deg) {
 
 export const AIRFIELDS = [
   { id: 'harbor', name: 'Harbor Field', short: 'HBR', x: -650, z: 1750, heading: 352, length: 1100, width: 32, elevation: 7 },
-  { id: 'ridge', name: 'Ridge Strip', short: 'RDG', x: 1650, z: -1250, heading: 28, length: 640, width: 22, elevation: 0 },
+  { id: 'ridge', name: 'Ridge Strip', short: 'RDG', x: 1650, z: -1250, heading: 208, length: 640, width: 22, elevation: 0 },
   { id: 'light', name: 'Lighthouse Point', short: 'LHP', x: 3900, z: 2650, heading: 158, length: 760, width: 26, elevation: 14, blend: 700 },
 ];
 

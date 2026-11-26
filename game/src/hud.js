@@ -81,13 +81,16 @@ export class Hud {
     const g = this.g;
     g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     const W = this.W, H = this.H;
-    const compact = W < 760;
+    const compact = W < 760 || H < 500;
+    const touch = document.body.classList.contains('touch');
     const scale = Math.max(0.72, Math.min(1.25, Math.min(W / 1280, H / 720) * 1.05));
     this.scale = scale;
+    if (s.runwayCue) this.runwayBox(s, camera, W, H, scale);
     if (s.showTargets) this.targets(s, camera, W, H, scale);
     this.flightPath(s, camera, W, H, scale);
     this.headingTape(s, W / 2, 34 * scale, Math.min(W * 0.46, 560 * scale), 46 * scale, scale);
-    const tapeH = Math.min(H * 0.4, 290 * scale), tapeY = H * 0.5;
+    const tapeH = touch ? Math.min(H * 0.3, 220 * scale) : Math.min(H * 0.4, 290 * scale);
+    const tapeY = touch ? H * 0.38 : H * 0.5;
     this.speedTape(s, 44 * scale + (compact ? 0 : 20), tapeY, 92 * scale, tapeH, scale);
     this.altTape(s, W - (44 * scale + (compact ? 0 : 20)) - 92 * scale, tapeY, 92 * scale, tapeH, scale);
     if (!compact) this.missionCard(s, 18, 14, scale);
@@ -203,6 +206,9 @@ export class Hud {
       _p.copy(s.target.pos).add(s.target.up).project(camera);
       const ty = Math.min(y - 18 * k, (-_p.y * 0.5 + 0.5) * H - 14 * k);
       this.text(`${s.target.label} · ${label}`, x, ty, 13 * k, CUE, 'center', 800);
+    } else if (onScreen && s.runwayCue) {
+      // the runway box already names the field; just give the distance to the threshold
+      this.text(label, x, y + 16 * k, 13 * k, INK, 'center', 700, MONO);
     } else if (onScreen) {
       g.strokeStyle = CUE; g.lineWidth = 2.5;
       const r = 12 * k;
@@ -219,6 +225,30 @@ export class Hud {
       g.restore();
       this.text(label, ex - Math.cos(a) * 30 * k, ey - Math.sin(a) * 26 * k, 12 * k, INK, 'center', 700, MONO);
     }
+  }
+
+  /** Outlines the destination runway in the HUD, like a synthetic-vision box, with its number. */
+  runwayBox(s, camera, W, H, k) {
+    const cue = s.runwayCue;
+    const pts = [];
+    for (const c of cue.corners) {
+      _p.copy(c).project(camera);
+      if (_p.z > 1) return;
+      pts.push([(_p.x * 0.5 + 0.5) * W, (-_p.y * 0.5 + 0.5) * H]);
+    }
+    const g = this.g;
+    g.save();
+    g.strokeStyle = CYAN; g.lineWidth = 2; g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 3;
+    g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); g.stroke();
+    // extended centreline toward the pilot
+    const nx = (pts[0][0] + pts[1][0]) / 2, ny = (pts[0][1] + pts[1][1]) / 2;
+    const fx = (pts[2][0] + pts[3][0]) / 2, fy = (pts[2][1] + pts[3][1]) / 2;
+    g.setLineDash([6, 6]); g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(nx, ny); g.lineTo(nx + (nx - fx) * 0.6, ny + (ny - fy) * 0.6); g.stroke();
+    g.restore();
+    const top = Math.min(...pts.map((p) => p[1]));
+    const cx = pts.reduce((a, p) => a + p[0], 0) / 4;
+    this.text(cue.label, cx, top - 12 * k, 13 * k, CYAN, 'center', 800);
   }
 
   missionCard(s, x, y, k) {

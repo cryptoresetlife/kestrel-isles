@@ -144,10 +144,30 @@ export function buildTerrainMesh(segments = 320) {
     colors[i * 3] = col.r; colors[i * 3 + 1] = col.g; colors[i * 3 + 2] = col.b;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
+  const mat = new THREE.MeshLambertMaterial({ vertexColors: true, map: detailTexture() });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.receiveShadow = true;
   return mesh;
+}
+
+/** A tiling grey speckle that breaks up the flat vertex colours close to the ground. */
+function detailTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f2f2f2'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2600; i++) {
+    const v = 175 + Math.floor(Math.random() * 80);
+    g.fillStyle = `rgba(${v},${v},${v},0.55)`;
+    const s = 2 + Math.random() * 7;
+    g.beginPath(); g.ellipse(Math.random() * 256, Math.random() * 256, s, s * (0.4 + Math.random() * 0.6), Math.random() * 3, 0, Math.PI * 2); g.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(WORLD_SIZE / 40, WORLD_SIZE / 40);
+  tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 /** A depth map of the sea floor so the water shader can paint shallows and surf. */

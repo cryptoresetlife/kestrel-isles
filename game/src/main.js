@@ -1,7 +1,7 @@
 // Kestrel Isles: boots the world and runs the game loop, menus, sorties, landings and crashes.
 import * as THREE from 'three';
 import { initTerrain, buildTerrainMesh, buildSea, groundAt, meshHeightAt } from './terrain.js';
-import { buildAirfields, airfieldById, headingVector } from './airfields.js';
+import { buildAirfields, airfieldById, headingVector, runwayWorld, AIRFIELDS } from './airfields.js';
 import { buildScenery } from './scenery.js';
 import { Sky } from './sky.js';
 import { Aircraft } from './aircraft.js';
@@ -284,6 +284,19 @@ class Game {
     for (const id of ['harbor', 'ridge', 'light']) { const af = airfieldById(id); radarPoints.push({ x: af.x, z: af.z, color: '#ffffff', size: 3 }); }
     const velDir = fm.vel.lengthSq() > 1 ? fm.vel.clone().normalize() : new THREE.Vector3(0, 0, -1).applyQuaternion(fm.quat);
     const ftAgl = fm.agl * M_TO_FT;
+    let runwayCue = null;
+    if (this.mode === 'flying' && !fm.onGround) {
+      const next = r.mission ? r.mission.steps.slice(r.stepIndex).find((st) => st.type === 'land') : null;
+      const dist = (a) => Math.hypot(a.x - fm.pos.x, a.z - fm.pos.z);
+      const af = next ? airfieldById(next.field) : AIRFIELDS.reduce((b, a) => (dist(a) < dist(b) ? a : b));
+      if (dist(af) < 6000) {
+        const corners = [[-1, -1], [-1, 1], [1, 1], [1, -1]].map(([u, v]) => {
+          const p = runwayWorld(af, u * af.length / 2, v * af.width / 2);
+          return new THREE.Vector3(p.x, af.elevation + 0.3, p.z);
+        });
+        runwayCue = { corners, label: `RWY ${String(Math.round(af.heading / 10) % 36 || 36).padStart(2, '0')} · ${af.short}` };
+      }
+    }
     const sinking = fm.vs < -8 && ftAgl < 400 && !fm.onGround;
     return {
       kt: fm.airspeed * MS_TO_KT, gs: fm.groundSpeed * MS_TO_KT, ft: fm.pos.y * M_TO_FT - (fm.gearDown ? 5.6 : 2.4), aglFt: ftAgl,
@@ -291,7 +304,7 @@ class Game {
       throttle: c.throttle, flaps: fm.flaps, gearDown: fm.gearDown && this.aircraft.gearT > 0.98, gearMoving: this.aircraft.gearT > 0.02 && this.aircraft.gearT < 0.98,
       brake: c.brake, stall: fm.stall || (fm.alpha > 0.22 && !fm.onGround && fm.airspeed > 10), engineOn: fm.engineOn, overspeed: fm.airspeed > K7.vne, damage: fm.damage,
       pullUp: sinking, view: this.view, speed: fm.airspeed, pos: fm.pos, velDir, bug: bearing, bearing,
-      target, showTargets: this.mode === 'flying', missionName: this.mission ? this.mission.name : '', objective: r.mission ? r.objectiveText() : '',
+      target, runwayCue, showTargets: this.mode === 'flying', missionName: this.mission ? this.mission.name : '', objective: r.mission ? r.objectiveText() : '',
       objectives: r.mission ? r.checklist() : [], timer: r.mission && r.mission.par ? r.elapsed : null, radarPoints,
       hint: this.mode === 'flying' && this.flightTime < 9 && this.mission.start.onGround ? 'Hold Shift for full throttle · at 55 kt ease back on S to lift off\nC switches chase / cockpit view · drag the mouse to fly with it' : null,
     };

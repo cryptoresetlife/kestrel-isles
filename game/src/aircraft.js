@@ -28,6 +28,20 @@ function wingPanel(span, rootChord, tipChord, thick, side) {
   return g;
 }
 
+/** White registration letters on a transparent canvas. */
+function registrationTexture(text) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 64;
+  const g = c.getContext('2d');
+  g.font = 'bold 50px "Segoe UI", system-ui, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#ffffff';
+  g.fillText(text, 128, 34);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 /** A control surface hinged on its front edge, so rotating the returned pivot deflects it. */
 function hinged(geo, material, hingeAt) {
   const pivot = new THREE.Group();
@@ -153,6 +167,14 @@ export class Aircraft {
     this.strobe = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }));
     this.strobe.position.set(0, 1.83, 4.0);
     this.exterior.add(stab, fin, rud.pivot, this.strobe);
+    // registration painted on both sides of the fin
+    const reg = registrationTexture('K7-ISL');
+    for (const side of [-1, 1]) {
+      const decal = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.25), new THREE.MeshStandardMaterial({ map: reg, transparent: true, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2 }));
+      decal.position.set(side * 0.052, 0.62, 3.72);
+      decal.rotation.y = side * Math.PI / 2;
+      this.exterior.add(decal);
+    }
 
     // landing gear: tricycle, retracting by scaling into the wells
     this.gear = new THREE.Group();

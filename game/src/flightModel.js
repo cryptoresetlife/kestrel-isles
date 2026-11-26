@@ -38,6 +38,7 @@ export class FlightModel {
     this.onGround = false; this.stall = false; this.alpha = 0; this.beta = 0; this.gLoad = 1;
     this.airspeed = 0; this.agl = 0; this.groundSpeed = 0; this.vs = 0;
     this.gust = 0; this.time = 0;
+    this.trim = K7.trimAlpha;
   }
 
   /** Places the aircraft at (x, y, z) pointing along heading (deg), pitched by pitchDeg, at speed m/s. */
@@ -49,6 +50,7 @@ export class FlightModel {
     this.vel.copy(_f).multiplyScalar(speed);
     this.omega.set(0, 0, 0);
     this.rpm = speed > 0 ? 0.75 : 0.2;
+    this.trim = K7.trimAlpha;
   }
 
   forward(out) { return out.set(0, 0, -1).applyQuaternion(this.quat); }
@@ -125,11 +127,18 @@ export class FlightModel {
     _force.y -= k.mass * G;
     this.gLoad = lift / (k.mass * G);
 
+    // auto-trim: with the stick near centre the trim creeps toward level flight at the current speed
+    if (!this.onGround && qdyn > 150 && Math.abs(c.pitch) < 0.15) {
+      const loadFactor = 1 / Math.max(0.6, Math.cos(THREE.MathUtils.degToRad(this.bankDeg)));
+      const level = THREE.MathUtils.clamp((k.mass * G * loadFactor / (qdyn * k.wingArea * ge) - cl0) / k.clAlpha, -0.06, 0.2);
+      this.trim += (level - this.trim) * Math.min(1, dt * 0.4);
+    }
+
     // rotation: commanded rates, aerodynamic stability, damping
     const eff = THREE.MathUtils.clamp(qdyn / (0.5 * RHO * 48 * 48), 0.08, 1.35) * (1 - this.damage / 220);
     const R = k.rates;
     const tgt = _tmp.set(
-      c.pitch * R.pitch * eff - (this.onGround ? a * 0.8 : (a - k.trimAlpha) * 3.0) * eff,
+      c.pitch * R.pitch * eff - (this.onGround ? a * 0.8 : (a - this.trim) * 3.0) * eff,
       -c.yaw * R.yaw * eff - this.beta * 2.4 * eff,
       -c.roll * R.roll * eff,
     );

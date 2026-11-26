@@ -25,7 +25,7 @@ const SETUPS = {
   approach(game) {
     game.launch('circuit');
     skipTo(game, 1, 5, 171.4);
-    placeOnApproach(game, 'harbor', -1520, -4, 78, 36, -1.5);
+    placeOnApproach(game, 'harbor', -1380, -3, 64, 36, -2);
     Object.assign(game.input.controls, { throttle: 0.28, flaps: 2, gearDown: true, pitch: -0.35 });
     game.fm.gearDown = true; game.aircraft.gearT = 1;
     game.fm.fuel *= 0.78;
@@ -47,7 +47,8 @@ const SETUPS = {
     const prev = game.rings.rings[2].pos;
     const dx = ring.x - prev.x, dz = ring.z - prev.z, d = Math.hypot(dx, dz);
     const hdg = (Math.atan2(dx, -dz) * 180 / Math.PI + 360) % 360;
-    game.fm.place(ring.x - dx / d * 260 + 14, ring.y + 6, ring.z - dz / d * 260, hdg + 4, 60, 0);
+    game.fm.place(ring.x - dx / d * 300 + 10, ring.y + 1, ring.z - dz / d * 300, hdg + 3, 60, 0);
+    game.fm.trim = 0.0;
     Object.assign(game.input.controls, { throttle: 0.8, roll: 0.06, pitch: 0.02, gearDown: false });
     game.fm.gearDown = false; game.aircraft.gearT = 0;
     game.setView('chase');
