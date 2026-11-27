@@ -32,7 +32,7 @@ export function buildMissions() {
         { type: 'takeoff' },
         { type: 'rings', points: [
           fieldRing('harbor', 1000, 0, 120), fieldRing('harbor', 1450, -650, 210), fieldRing('harbor', 500, -1150, 260),
-          fieldRing('harbor', -700, -1150, 240), fieldRing('harbor', -1900, -420, 150), fieldRing('harbor', -800, 0, 40, 24),
+          fieldRing('harbor', -700, -1150, 240), fieldRing('harbor', -1900, -420, 150), fieldRing('harbor', -690, 0, 31, 24),
         ] },
         { type: 'land', field: 'harbor' },
       ],

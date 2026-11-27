@@ -25,8 +25,8 @@ const SETUPS = {
   approach(game) {
     game.launch('circuit');
     const q = new URLSearchParams(location.search);
-    const u = Number(q.get('u') || -985), h = Number(q.get('h') || 47);
-    if (u > -800) skipTo(game, 2, 0, 188.6); else skipTo(game, 1, 5, 171.4);
+    const u = Number(q.get('u') || -860), h = Number(q.get('h') || 39);
+    if (u > -690) skipTo(game, 2, 0, 188.6); else skipTo(game, 1, 5, 171.4);
     placeOnApproach(game, 'harbor', u, -3, h, 36, -2);
     Object.assign(game.input.controls, { throttle: 0.28, flaps: 2, gearDown: true, pitch: -0.35 });
     game.fm.gearDown = true; game.aircraft.gearT = 1;
@@ -36,7 +36,7 @@ const SETUPS = {
   cockpit(game) {
     game.launch('circuit');
     skipTo(game, 1, 5, 171.4);
-    placeOnApproach(game, 'harbor', -1140, 3, 56, 36, -3);
+    placeOnApproach(game, 'harbor', -930, 2, 45, 36, -3);
     Object.assign(game.input.controls, { throttle: 0.25, flaps: 2, gearDown: true, pitch: -0.35 });
     game.fm.gearDown = true; game.aircraft.gearT = 1;
     game.fm.fuel *= 0.78;
