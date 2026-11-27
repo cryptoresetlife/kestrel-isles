@@ -15,6 +15,7 @@ import { AudioEngine } from './audio.js';
 import { MenuMusic } from './music.js';
 import { Effects } from './effects.js';
 import { RingCourse } from './rings.js';
+import { CargoDrop } from './cargoDrop.js';
 import { buildMissions } from './missions.js';
 import { MissionRunner } from './missionRunner.js';
 import { judgeTouchdown, judgeRollout, FPM } from './touchdown.js';
@@ -59,7 +60,8 @@ class Game {
     this.effects = new Effects(this.scene);
     this.rings = new RingCourse(this.scene);
     this.missions = buildMissions();
-    this.runner = new MissionRunner(this.rings);
+    this.cargo = new CargoDrop(this.scene);
+    this.runner = new MissionRunner(this.rings, this.cargo);
     this.status = document.getElementById('status');
     this.view = 'chase';
     this.mode = 'title';
@@ -104,7 +106,17 @@ class Game {
     inp.on('restart', () => { if (this.mode === 'flying' || this.mode === 'paused' || this.mode === 'debrief') this.launch(this.mission.id); });
     inp.on('mute', () => this.toggleMute());
     inp.on('gear', () => { if (this.mode === 'flying') { this.audio.gearMotor(); if (this.fm.onGround && !inp.controls.gearDown) { inp.controls.gearDown = true; this.hud.flash('Gear locked on the ground', '', 'info', 1.5); } } });
+    inp.on('drop', () => this.releaseCargo());
     inp.on('mouseYoke', () => this.hud.flash(inp.mouseYoke ? 'Mouse yoke ON' : 'Mouse yoke OFF', inp.mouseYoke ? 'The cursor is your stick — centre it to fly straight' : '', 'info', 2));
+  }
+
+  /** Space: lets one sack go while a drop zone is the current goal. */
+  releaseCargo() {
+    const st = this.runner.step;
+    if (this.mode !== 'flying' || this.crashed || !st || st.type !== 'drop') return;
+    if (this.fm.onGround) { this.hud.flash('Drop from the air', 'Fly over the orange circle first', 'info', 2); return; }
+    if (this.cargo.release(this.fm)) { this.audio.click(); this.hud.flash(`${st.cargo.toUpperCase()} AWAY`, `${this.cargo.left} left on board`, 'info', 1.6); }
+    else this.hud.flash('Nothing left to drop', '', 'bad', 1.6);
   }
 
   toggleMute() { this.audio.setMuted(!this.audio.muted); Save.setSetting('muted', this.audio.muted); }
@@ -127,6 +139,7 @@ class Game {
     this.sky.apply('golden');
     this.scenery.tintClouds(0xffe2c4);
     this.rings.clear();
+    this.cargo.clear();
     this.effects.clear();
     this.aircraft.root.visible = true;
     this.setView('chase');
@@ -227,6 +240,13 @@ class Game {
       } else if (e.type === 'miss') {
         this.audio.missChime();
         this.hud.flash('Missed the ring', 'Turn back and fly through it', 'bad', 2.2);
+      } else if (e.type === 'delivered') {
+        this.audio.ringChime(3);
+        this.effects.sparks(e.pos, 0xff7a1a);
+        this.hud.flash(e.miss < 12 ? 'BULLSEYE DROP' : 'CARGO DELIVERED', `${e.miss.toFixed(0)} m from the centre of the circle`, 'good', 3);
+      } else if (e.type === 'dropMiss') {
+        this.audio.missChime();
+        this.hud.flash(e.water ? 'Sack in the sea' : 'Missed the circle', `${e.miss.toFixed(0)} m off · ${e.left} left — come around again`, 'bad', 3);
       } else if (e.type === 'step') {
         this.hud.flash(e.text, e.sub, 'good', 2.5);
       } else if (e.type === 'warn') {
@@ -282,6 +302,13 @@ class Game {
     if (target) bearing = (THREE.MathUtils.radToDeg(Math.atan2(target.pos.x - fm.pos.x, -(target.pos.z - fm.pos.z))) + 360) % 360;
     const radarPoints = [];
     for (const rr of this.rings.rings) if (!rr.passed) radarPoints.push({ x: rr.pos.x, z: rr.pos.z, color: rr === this.rings.current ? '#ffc23a' : '#56e0ff', size: rr === this.rings.current ? 4.5 : 3 });
+    const zone = this.cargo.zone;
+    if (zone) radarPoints.push({ x: zone.pos.x, z: zone.pos.z, color: '#ff7a1a', size: 5 });
+    let drop = null;
+    if (zone && this.mode === 'flying') {
+      const impact = fm.onGround ? null : this.cargo.predictImpact(fm, groundAt);
+      drop = { left: this.cargo.left, impact, onTarget: !!impact && Math.hypot(impact.x - zone.pos.x, impact.z - zone.pos.z) <= zone.radius };
+    }
     for (const id of ['harbor', 'ridge', 'light']) { const af = airfieldById(id); radarPoints.push({ x: af.x, z: af.z, color: '#ffffff', size: 3 }); }
     const velDir = fm.vel.lengthSq() > 1 ? fm.vel.clone().normalize() : new THREE.Vector3(0, 0, -1).applyQuaternion(fm.quat);
     const ftAgl = fm.agl * M_TO_FT;
@@ -305,7 +332,7 @@ class Game {
       throttle: c.throttle, flaps: fm.flaps, gearDown: fm.gearDown && this.aircraft.gearT > 0.98, gearMoving: this.aircraft.gearT > 0.02 && this.aircraft.gearT < 0.98,
       brake: c.brake, stall: fm.stall || (fm.alpha > 0.22 && !fm.onGround && fm.airspeed > 10), engineOn: fm.engineOn, overspeed: fm.airspeed > K7.vne, damage: fm.damage,
       pullUp: sinking, view: this.view, speed: fm.airspeed, pos: fm.pos, velDir, bug: bearing, bearing,
-      target, runwayCue, showTargets: this.mode === 'flying', missionName: this.mission ? this.mission.name : '', objective: r.mission ? r.objectiveText() : '',
+      target, runwayCue, drop, showTargets: this.mode === 'flying', missionName: this.mission ? this.mission.name : '', objective: r.mission ? r.objectiveText() : '',
       objectives: r.mission ? r.checklist() : [], timer: r.mission && r.mission.par ? r.elapsed : null, radarPoints,
       hint: this.mode === 'flying' && this.flightTime < 9 && this.mission.start.onGround ? 'Hold Shift for full throttle · at 55 kt ease back on S to lift off\nC switches chase / cockpit view · drag the mouse to fly with it' : null,
     };
@@ -328,7 +355,11 @@ class Game {
           const roll = judgeRollout(fm, g);
           if (roll) this.crash(roll, g.kind === 'water');
         }
-        if (!this.crashed) this.handleEvents(this.runner.update(dt, fm, c));
+        if (!this.crashed) {
+          const events = this.runner.update(dt, fm, c);
+          for (const l of this.cargo.update(dt, this.time, fm.wind, groundAt)) this.runner.sackLanded(l, events);
+          this.handleEvents(events);
+        }
         if (!this.crashed && (fm.damage > 35 || !fm.engineOn) && Math.random() < dt * (fm.damage > 60 ? 30 : 12)) {
           this.effects.smoke(new THREE.Vector3(0, 0, -2.2).applyQuaternion(fm.quat).add(fm.pos), fm.vel, fm.damage > 60);
         }

@@ -64,9 +64,32 @@ const SETUPS = {
     game.fm.gearDown = false; game.aircraft.gearT = 0;
     game.setView('chase');
   },
+  drop(game) {
+    game.launch('supply');
+    skipTo(game, 2, 0, 132.4);
+    const q = new URLSearchParams(location.search);
+    const back = Number(q.get('back') || 330), up = Number(q.get('up') || 85);
+    const zone = game.cargo.zone.pos;
+    const hdg = Number(q.get('hdg') || 200), rad = hdg * Math.PI / 180;
+    const dx = Math.sin(rad), dz = -Math.cos(rad);
+    const side = Number(q.get('side') || -38);
+    const ax = zone.x - dx * back - dz * side, az = zone.z - dz * back + dx * side;
+    game.fm.place(ax, zone.y + up, az, hdg, 44, -1);
+    Object.assign(game.input.controls, { throttle: 0.45, flaps: 1, gearDown: false, pitch: 0 });
+    game.fm.gearDown = false; game.aircraft.gearT = 0;
+    game.fm.fuel *= 0.62;
+    game.setView('chase');
+    // one crate from the pass before is already coming down under its canopy
+    game.cargo.release(game.fm);
+    const crate = game.cargo.sacks[0];
+    const fwd = Number(q.get('fwd') || 105), right = Number(q.get('right') || 15), down = Number(q.get('down') || -3);
+    crate.pos.set(ax + dx * fwd - dz * right, zone.y + up - down, az + dz * fwd + dx * right);
+    crate.vel.set(0, -8, 0);
+    crate.age = 3;
+  },
   touchdown(game) {
     game.launch('mail');
-    skipTo(game, 2, 0, 288.4);
+    skipTo(game, 4, 0, 348.4);
     placeOnApproach(game, 'light', -330, 1, 1.9, 31, 2);
     game.fm.vel.y = -1.1;
     game.fm.trim = 0.04;

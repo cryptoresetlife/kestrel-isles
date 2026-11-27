@@ -6,7 +6,7 @@
 
 **Kestrel Isles** is an island-hopping bush-pilot flight game for the desktop browser. Fly the K-7 Kestrel, a
 two-seat low-wing tourer, over a procedurally shaped archipelago: take off from Harbor Field, thread target
-rings through a mountain valley, deliver mail to Lighthouse Point across the strait, haul spares up to the
+rings through a mountain valley, parachute the mail into the lighthouse yard across the strait, drop a supply crate on a plateau camp before landing at the
 short Ridge Strip and come home at dusk by the runway lights.
 
 - Chase and cockpit views, with a live backlit six-pack panel (airspeed, attitude, altimeter, heading, VSI, RPM/fuel).
@@ -25,7 +25,7 @@ node serve.ts    # then open http://localhost:8080
 ```
 
 Controls: `W/S` pitch, `A/D` roll, `Q/E` rudder, `Shift/Z` or the mouse wheel for throttle, `G` gear,
-`F/V` flaps, `B` brakes, `C` chase/cockpit view, `P` pause, `R` restart.
+`F/V` flaps, `B` brakes, `Space` release cargo over a drop zone, `C` chase/cockpit view, `P` pause, `R` restart.
 
 `MAKEFUN_OUTPUT_DIR=out node main.ts` writes the hand-in (game, screenshots, dossier) to `out/`.
 The game vendors three.js r160 (MIT) as `game/vendor/three.module.min.js`; everything else is original.

@@ -8,7 +8,7 @@ const MEDAL_ICON = { gold: '🥇', silver: '🥈', bronze: '🥉' };
 const CONTROLS = [
   ['W / S  or  ↑ / ↓', 'Nose down / nose up'], ['A / D  or  ← / →', 'Roll left / right'], ['Q / E', 'Rudder left / right'],
   ['Shift / Z  ·  wheel  ·  1–0', 'Throttle up / down'], ['Drag with the mouse', 'Fly with the mouse as a stick'], ['M', 'Mouse yoke on/off (stick follows the cursor)'],
-  ['G', 'Landing gear'], ['F / V', 'Flaps down / up'], ['B', 'Wheel brakes (hold)'], ['C', 'Chase / cockpit view'],
+  ['G', 'Landing gear'], ['F / V', 'Flaps down / up'], ['B', 'Wheel brakes (hold)'], ['Space or X', 'Release cargo over a drop zone'], ['C', 'Chase / cockpit view'],
   ['P or Esc', 'Pause'], ['R', 'Restart sortie'], ['N', 'Sound on/off'],
 ];
 
@@ -120,6 +120,7 @@ export class UI {
     const rows = [
       ['Time', formatTime(r.time) + (m.par ? `  (par ${formatTime(m.par)})` : '')],
       r.ringsTotal ? ['Rings', `${r.rings} / ${r.ringsTotal}`] : null,
+      r.dropMiss !== null && r.dropMiss !== undefined ? ['Cargo drop', `${r.dropMiss.toFixed(0)} m from the centre`] : null,
       L ? ['Touchdown', `${L.fpm} ft/min · ${L.kt} kt — ${L.text}`] : null,
       L && L.centreline !== undefined ? ['Centreline', `${L.centreline.toFixed(1)} m off`] : null,
       ['Fuel left', `${Math.round(r.fuel * 100)}%`], ['Airframe', r.damage > 1 ? `${Math.round(r.damage)}% damage` : 'No damage'],

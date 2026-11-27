@@ -7,11 +7,12 @@ function ring(x, z, agl, radius = 22, minY = 0) {
   return { x, z, y: Math.max(heightAt(x, z) + agl, minY, agl), radius };
 }
 
-/** A ring placed in a field's runway frame (u along the landing heading, v to the right), y above field. */
+/** A ring placed in a field's runway frame (u along the landing heading, v to the right), y above field; one on final faces down the runway. */
 function fieldRing(fieldId, u, v, above, radius = 24) {
   const af = airfieldById(fieldId);
   const p = runwayWorld(af, u, v);
-  return { x: p.x, z: p.z, y: Math.max(af.elevation + above, heightAt(p.x, p.z) + 40), radius };
+  const onFinal = Math.abs(v) < 1 && u < -af.length / 2;
+  return { x: p.x, z: p.z, y: Math.max(af.elevation + above, heightAt(p.x, p.z) + 40), radius, heading: onFinal ? af.heading : undefined };
 }
 
 function runwayStart(fieldId, fromEnd = 30) {
@@ -51,27 +52,31 @@ export function buildMissions() {
     },
     {
       id: 'mail', name: 'Lighthouse Mail', time: 'golden', tag: 'Delivery',
-      brief: 'The keeper at Lighthouse Point is waiting on the mail. Fly east across the strait and land on runway 16 before sunset.',
-      tips: 'Fuel is tight: climb to 1,500 ft, lean back to 70% throttle and let the crosswind drift you.',
-      start: runwayStart('harbor'), fuel: 0.34, wind: { from: 60, speed: 7 },
+      brief: 'The keeper at Lighthouse Point is waiting on the mail. Fly east across the strait, parachute the sack into the yard by the lighthouse, then land on runway 16 before sunset.',
+      tips: 'Fuel is tight: cruise at 70% throttle. Over the yard, fly low and slow and press Space when the drop pip crosses the orange circle.',
+      start: runwayStart('harbor'), fuel: 0.4, wind: { from: 60, speed: 7 },
       steps: [
         { type: 'takeoff' },
-        { type: 'rings', points: [fieldRing('harbor', 1300, 120, 220, 40), ring(2300, 2300, 260, 45), fieldRing('light', -1500, 0, 160, 36)] },
+        { type: 'rings', points: [fieldRing('harbor', 1300, 120, 220, 40), ring(2300, 2300, 260, 45)] },
+        { type: 'drop', x: 4150, z: 3200, radius: 60, name: 'lighthouse yard', cargo: 'mail sack', sacks: 3 },
+        { type: 'rings', points: [fieldRing('light', -1500, 0, 160, 36)] },
         { type: 'land', field: 'light' },
       ],
-      par: 300,
+      par: 380,
     },
     {
       id: 'supply', name: 'Ridge Supply Drop', time: 'morning', tag: 'Mountain',
-      brief: 'Haul spares from Lighthouse Point up to Ridge Strip, a short field on the mountain shelf.',
+      brief: 'The survey camp on the high plateau is out of supplies. Parachute a crate onto their marked circle, then land the rest at Ridge Strip, a short field on the mountain shelf.',
       tips: 'Ridge Strip is short and backed by the range: come in from the sea to the north-east, flaps 2, and brake hard.',
       start: runwayStart('light'), fuel: 0.55, wind: { from: 30, speed: 5 },
       steps: [
         { type: 'takeoff' },
-        { type: 'rings', points: [ring(2400, 600, 260, 40), fieldRing('ridge', -1400, 0, 150, 34)] },
+        { type: 'rings', points: [ring(2400, 600, 260, 40)] },
+        { type: 'drop', x: 1350, z: -600, radius: 55, name: 'plateau camp', cargo: 'supply crate', sacks: 3 },
+        { type: 'rings', points: [fieldRing('ridge', -1400, 0, 150, 34)] },
         { type: 'land', field: 'ridge' },
       ],
-      par: 330,
+      par: 400,
     },
     {
       id: 'dusk', name: 'Dusk Patrol', time: 'dusk', tag: 'Night',

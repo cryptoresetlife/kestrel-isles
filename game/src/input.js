@@ -2,7 +2,7 @@
 
 const KEY_ACTIONS = {
   KeyG: 'gear', KeyF: 'flapsDown', KeyV: 'flapsUp', KeyC: 'camera', KeyP: 'pause', Escape: 'pause',
-  KeyR: 'restart', KeyM: 'mouseYoke', KeyN: 'mute', KeyH: 'help', Enter: 'confirm', Space: 'confirm',
+  KeyR: 'restart', KeyM: 'mouseYoke', KeyN: 'mute', KeyH: 'help', Enter: 'confirm', Space: 'drop', KeyX: 'drop',
 };
 
 export class Input {

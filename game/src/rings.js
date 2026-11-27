@@ -20,13 +20,18 @@ export class RingCourse {
     this.index = 0;
   }
 
-  /** points: [{x, y, z, radius}] in order; each ring faces the direction of travel. */
-  build(points) {
+  /**
+   * points: [{x, y, z, radius, heading?}] in order; each ring faces the direction of travel, or its own
+   * heading when it has one. `from` is where the aircraft comes from, for a course of a single ring.
+   */
+  build(points, from) {
     this.clear();
     points.forEach((p, i) => {
-      const prev = points[i - 1] || { x: p.x - (points[i + 1].x - p.x), y: p.y, z: p.z - (points[i + 1].z - p.z) };
+      const after = points[i + 1];
+      const prev = points[i - 1] || (after ? { x: p.x - (after.x - p.x), y: p.y, z: p.z - (after.z - p.z) } : from ? { x: from.x, y: p.y, z: from.z } : { x: p.x, y: p.y, z: p.z + 1 });
       const next = points[i + 1] || { x: p.x + (p.x - prev.x), y: p.y, z: p.z + (p.z - prev.z) };
       const dir = new THREE.Vector3(next.x - prev.x, (next.y - prev.y) * 0.5, next.z - prev.z).normalize();
+      if (p.heading !== undefined) dir.set(Math.sin(p.heading * Math.PI / 180), 0, -Math.cos(p.heading * Math.PI / 180));
       const mat = new THREE.MeshBasicMaterial({ color: NEXT, transparent: true, opacity: 0.9, depthWrite: false, fog: false });
       const mesh = new THREE.Group();
       const ring = new THREE.Mesh(this.torus, mat);

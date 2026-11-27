@@ -88,6 +88,7 @@ export class Hud {
     if (s.runwayCue) this.runwayBox(s, camera, W, H, scale);
     if (s.showTargets) this.targets(s, camera, W, H, scale);
     this.flightPath(s, camera, W, H, scale);
+    if (s.drop && s.drop.impact) this.dropPip(s, camera, W, H, scale);
     // the heading tape sits between the mission card and the radar, sliding off centre on narrow windows
     const gapL = compact ? 0 : 26 + 300 * scale, gapR = compact ? W : W - 160 * scale - 30;
     const hdgW = Math.min(W * 0.46, 560 * scale, gapR - gapL);
@@ -193,6 +194,22 @@ export class Hud {
     g.stroke(); g.shadowBlur = 0;
   }
 
+  /** Where the cargo would land if released now: orange until it lies inside the drop zone, then green. */
+  dropPip(s, camera, W, H, k) {
+    _p.copy(s.drop.impact).project(camera);
+    if (_p.z > 1) return;
+    const x = (_p.x * 0.5 + 0.5) * W, y = (-_p.y * 0.5 + 0.5) * H;
+    const g = this.g, c = s.drop.onTarget ? OK : CUE, r = 11 * k;
+    g.save();
+    g.strokeStyle = c; g.lineWidth = 2.5; g.shadowColor = 'rgba(0,0,0,0.7)'; g.shadowBlur = 3;
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2);
+    g.moveTo(x - r * 1.7, y); g.lineTo(x - r * 0.4, y); g.moveTo(x + r * 0.4, y); g.lineTo(x + r * 1.7, y);
+    g.moveTo(x, y - r * 1.7); g.lineTo(x, y - r * 0.4); g.moveTo(x, y + r * 0.4); g.lineTo(x, y + r * 1.7);
+    g.stroke();
+    g.restore();
+    this.text(s.drop.onTarget ? 'RELEASE · SPACE' : 'DROP PIP', x, y + r * 1.7 + 10 * k, 12 * k, c, 'center', 800);
+  }
+
   /** Diamond over the next target, or an arrow at the edge pointing to it. */
   targets(s, camera, W, H, k) {
     if (!s.target) return;
@@ -209,7 +226,7 @@ export class Hud {
       _p.copy(s.target.pos).add(s.target.up).project(camera);
       const ty = Math.min(y - 18 * k, (-_p.y * 0.5 + 0.5) * H - 14 * k);
       this.text(`${s.target.label} · ${label}`, x, ty, 13 * k, CUE, 'center', 800);
-    } else if (onScreen && s.runwayCue) {
+    } else if (onScreen && s.runwayCue && !s.target.drop) {
       // the runway box already names the field; just give the distance to the threshold
       this.text(label, x, y + 16 * k, 13 * k, INK, 'center', 700, MONO);
     } else if (onScreen) {
@@ -256,13 +273,14 @@ export class Hud {
 
   missionCard(s, x, y, k) {
     const w = 300 * k, lines = s.objectives || [];
-    const h = (64 + lines.length * 22) * k;
+    const gap = lines.length > 4 ? 19 : 22;
+    const h = (62 + lines.length * gap) * k;
     this.panel(x, y, w, h, 10, 0.5);
     this.text(s.missionName.toUpperCase(), x + 14 * k, y + 18 * k, 15 * k, CUE, 'left', 800);
     if (s.timer !== null) this.text(formatTime(s.timer), x + w - 14 * k, y + 18 * k, 16 * k, INK, 'right', 800, MONO);
     this.text(s.objective, x + 14 * k, y + 42 * k, 14 * k, INK, 'left', 600);
     lines.forEach((l, i) => {
-      const yy = y + (66 + i * 22) * k;
+      const yy = y + (66 + i * gap) * k;
       this.text(l.done ? '✓' : '•', x + 16 * k, yy, 14 * k, l.done ? OK : 'rgba(244,251,255,0.6)', 'left', 800);
       this.text(l.text, x + 34 * k, yy, 13 * k, l.done ? 'rgba(244,251,255,0.55)' : INK, 'left', 600);
     });
@@ -327,7 +345,8 @@ export class Hud {
       { t: `THR ${Math.round(s.throttle * 100)}%`, c: INK },
       { t: `FUEL ${Math.round(s.fuel * 100)}%`, c: s.fuel < 0.15 ? WARN : INK },
     ];
-    if (s.damage > 1) items.push({ t: `DMG ${Math.round(s.damage)}%`, c: s.damage > 50 ? WARN : CUE });
+    items.push({ t: `AIRFRAME ${Math.round(100 - s.damage)}%`, c: s.damage > 50 ? WARN : s.damage > 1 ? CUE : INK });
+    if (s.drop) items.push({ t: `CARGO ${s.drop.left}`, c: s.drop.left ? CUE : WARN });
     if (s.brake) items.push({ t: 'BRAKE', c: CUE });
     if (s.stall) items.push({ t: 'STALL', c: WARN, blink: true });
     if (!s.engineOn) items.push({ t: 'ENGINE OUT', c: WARN, blink: true });
