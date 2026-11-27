@@ -89,7 +89,7 @@ const SETUPS = {
   },
   touchdown(game) {
     game.launch('mail');
-    skipTo(game, 4, 0, 348.4);
+    skipTo(game, 3, 0, 348.4);
     placeOnApproach(game, 'light', -330, 1, 1.9, 31, 2);
     game.fm.vel.y = -1.1;
     game.fm.trim = 0.04;

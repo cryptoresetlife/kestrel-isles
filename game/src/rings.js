@@ -21,16 +21,19 @@ export class RingCourse {
   }
 
   /**
-   * points: [{x, y, z, radius, heading?}] in order; each ring faces the direction of travel, or its own
-   * heading when it has one. `from` is where the aircraft comes from, for a course of a single ring.
+   * points: [{x, y, z, radius, heading?}] in order; each ring faces half-way between the leg that arrives and
+   * the leg that leaves, or its own heading when it has one. `from` is where the aircraft comes from to the first.
    */
   build(points, from) {
     this.clear();
     points.forEach((p, i) => {
       const after = points[i + 1];
-      const prev = points[i - 1] || (after ? { x: p.x - (after.x - p.x), y: p.y, z: p.z - (after.z - p.z) } : from ? { x: from.x, y: p.y, z: from.z } : { x: p.x, y: p.y, z: p.z + 1 });
-      const next = points[i + 1] || { x: p.x + (p.x - prev.x), y: p.y, z: p.z + (p.z - prev.z) };
-      const dir = new THREE.Vector3(next.x - prev.x, (next.y - prev.y) * 0.5, next.z - prev.z).normalize();
+      const prev = points[i - 1] || from || (after ? { x: p.x - (after.x - p.x), z: p.z - (after.z - p.z) } : { x: p.x, z: p.z + 1 });
+      const next = after || { x: p.x + (p.x - prev.x), z: p.z + (p.z - prev.z) };
+      const inbound = new THREE.Vector3(p.x - prev.x, 0, p.z - prev.z).normalize();
+      const dir = new THREE.Vector3(next.x - p.x, 0, next.z - p.z).normalize().add(inbound);
+      if (dir.lengthSq() < 0.05) dir.copy(inbound);
+      dir.normalize();
       if (p.heading !== undefined) dir.set(Math.sin(p.heading * Math.PI / 180), 0, -Math.cos(p.heading * Math.PI / 180));
       const mat = new THREE.MeshBasicMaterial({ color: NEXT, transparent: true, opacity: 0.9, depthWrite: false, fog: false });
       const mesh = new THREE.Group();
@@ -69,14 +72,14 @@ export class RingCourse {
   }
 
   /**
-   * Checks whether the segment from a to b passes through the current ring.
+   * Checks whether the segment from a to b passes through the current ring, from either side.
    * Returns 'pass', 'miss' (crossed the ring's plane outside it) or null.
    */
   check(a, b) {
     const r = this.current;
     if (!r) return null;
     const da = a.clone().sub(r.pos).dot(r.normal), db = b.clone().sub(r.pos).dot(r.normal);
-    if (da < 0 && db >= 0) {
+    if ((da < 0) !== (db < 0)) {
       const t = -da / (db - da);
       const hit = a.clone().lerp(b, t);
       const off = hit.distanceTo(r.pos);

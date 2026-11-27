@@ -52,14 +52,13 @@ export function buildMissions() {
     },
     {
       id: 'mail', name: 'Lighthouse Mail', time: 'golden', tag: 'Delivery',
-      brief: 'The keeper at Lighthouse Point is waiting on the mail. Fly east across the strait, parachute the sack into the yard by the lighthouse, then land on runway 16 before sunset.',
+      brief: 'The keeper at Lighthouse Point is waiting on the mail. Fly east across the strait, parachute the sack into the yard by the lighthouse, then turn back and land at Lighthouse Point before sunset.',
       tips: 'Fuel is tight: cruise at 70% throttle. Over the yard, fly low and slow and press Space when the drop pip crosses the orange circle.',
       start: runwayStart('harbor'), fuel: 0.4, wind: { from: 60, speed: 7 },
       steps: [
         { type: 'takeoff' },
         { type: 'rings', points: [fieldRing('harbor', 1300, 120, 220, 40), ring(2300, 2300, 260, 45)] },
         { type: 'drop', x: 4150, z: 3200, radius: 60, name: 'lighthouse yard', cargo: 'mail sack', sacks: 3 },
-        { type: 'rings', points: [fieldRing('light', -1500, 0, 160, 36)] },
         { type: 'land', field: 'light' },
       ],
       par: 380,
@@ -73,7 +72,6 @@ export function buildMissions() {
         { type: 'takeoff' },
         { type: 'rings', points: [ring(2400, 600, 260, 40)] },
         { type: 'drop', x: 1350, z: -600, radius: 55, name: 'plateau camp', cargo: 'supply crate', sacks: 3 },
-        { type: 'rings', points: [fieldRing('ridge', -1400, 0, 150, 34)] },
         { type: 'land', field: 'ridge' },
       ],
       par: 400,
